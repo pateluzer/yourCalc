@@ -20,7 +20,7 @@ enum CalcButton: String {
     case divide = "÷"
     case multiply = "x"
     case equal = "="
-    case clear = "AC"
+    case clear = "C"
     case decimal = "."
     case percent = "%"
     case negative = "-/+"
@@ -38,6 +38,7 @@ enum CalcButton: String {
     }
 }
 
+//Arithmetic operation
 enum Operation {
     case add, subtract, multiply, divide, none
 }
@@ -45,8 +46,8 @@ enum Operation {
 struct ContentView: View {
     
     @State var value = "0"              //Default start value
-    @State var runningNumber = 0        //Keeping the total
-    @State var currentOperation: Operation = .none
+    @State var storedValue = 0          //Stores the value when "Operation" buttons are tapped
+    @State var currentOperation: Operation = .none      //Sets the current operation to "none" before clicking any operation button
     
     //Placing the buttons in the correct order
     let buttons: [[CalcButton]] = [
@@ -108,16 +109,16 @@ struct ContentView: View {
         switch button {
         case .add, .subtract, .multiply, .divide, .equal:
             if button != .equal {
-                self.runningNumber = Int(self.value) ?? 0
+                self.storedValue = Int(self.value) ?? 0
                 self.currentOperation = button == .add ? .add : button == .subtract ? .subtract : button == .multiply ? .multiply : .divide
                 self.value = "0"
             } else {
                 let currentValue = Int(self.value) ?? 0
                 switch self.currentOperation {
-                case .add: self.value = "\(self.runningNumber + currentValue)"
-                case .subtract: self.value = "\(self.runningNumber - currentValue)"
-                case .multiply: self.value = "\(self.runningNumber * currentValue)"
-                case .divide: self.value = "\(self.runningNumber / currentValue)"
+                case .add: self.value = "\(self.storedValue + currentValue)"
+                case .subtract: self.value = "\(self.storedValue - currentValue)"
+                case .multiply: self.value = "\(self.storedValue * currentValue)"
+                case .divide: self.value = "\(self.storedValue / currentValue)"
                 case .none: break
                 }
             }
