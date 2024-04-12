@@ -45,9 +45,12 @@ enum Operation {
 
 struct ContentView: View {
     
-    @State var value = "0"              //Default start value
-    @State var storedValue = 0          //Stores the value when "Operation" buttons are tapped
+    @State var value: Double = 0              //Default start value
+    @State var storedValue: Double = 0          //Stores the value when "Operation" buttons are tapped
     @State var currentOperation: Operation = .none      //Sets the current operation to "none" before clicking any operation button
+    @State var decimalEntered = false
+    @State var digitsAfterDecimal: Int = 0 // Track the number of digits after the decimal point
+
     
     //Placing the buttons in the correct order
     let buttons: [[CalcButton]] = [
@@ -69,7 +72,7 @@ struct ContentView: View {
                 // Text display
                 HStack {
                     Spacer()
-                    Text(value)
+                    Text("\(value)")    //Converts Double to String for display
                         //Styling
                         .bold()
                         .font(.system(size: 100))
@@ -105,58 +108,55 @@ struct ContentView: View {
     
     //Logic
     //Decimal button is missing some logic and isn't functioning as it should (Need to fix this!!)
+
     func didTap(button: CalcButton) {
         switch button {
         case .add, .subtract, .multiply, .divide, .equal:
             if button != .equal {
-                self.storedValue = Int(self.value) ?? 0
+                self.storedValue = self.value
                 self.currentOperation = button == .add ? .add : button == .subtract ? .subtract : button == .multiply ? .multiply : .divide
-                self.value = "0"
+                self.value = 0
+                self.decimalEntered = false
             } else {
-                let currentValue = Int(self.value) ?? 0
+                let currentValue = self.value
                 switch self.currentOperation {
-                case .add: self.value = "\(self.storedValue + currentValue)"
-                case .subtract: self.value = "\(self.storedValue - currentValue)"
-                case .multiply: self.value = "\(self.storedValue * currentValue)"
-                case .divide: self.value = "\(self.storedValue / currentValue)"
+                case .add: self.value = self.storedValue + currentValue
+                case .subtract: self.value = self.storedValue - currentValue
+                case .multiply: self.value = self.storedValue * currentValue
+                case .divide: self.value = self.storedValue / currentValue
                 case .none: break
                 }
+                self.decimalEntered = false
             }
         case .clear:
-            self.value = "0"
-        //Not functioning as it should be. Adding the decimal somehow makes the number act as "0" when using arithmetic operations against it
-        //i.e. 7.3 * 3 = 0 OR 4.5 + 3 = 3
+            self.value = 0
+            self.decimalEntered = false
+            self.digitsAfterDecimal = 0
         case .decimal:
-            if !self.value.contains(".") {
-                self.value += "."
+            // Only add decimal if the decimal point has not been entered yet
+            if !self.decimalEntered {
+                self.decimalEntered = true
             }
-        //Negation
         case .negative:
-            if !self.value.isEmpty && self.value != "0" {
-                if self.value.prefix(1) == "-" {
-                    self.value.remove(at: self.value.startIndex)
-                } else {
-                    self.value = "-" + self.value
-                }
-            }
-        //Calculates the percentage of the value
+            self.value *= -1
         case .percent:
-            if let currentValue = Double(self.value) {
-                self.value = "\(currentValue / 100)"
-            }
-            
-        //Default case
+            self.value /= 100
         default:
-            let number = button.rawValue
-            if self.value == "0" {
-                value = number
-            }
-            else {
-                self.value = "\(self.value)\(number)"
-            }
+          let number = Double(button.rawValue)!
+          if self.decimalEntered {
+              self.digitsAfterDecimal += 1
+            // Append the number as a fractional part
+              self.value += number / pow(10, Double(self.digitsAfterDecimal)) // Divide by 10 to shift the number one place to the right
+          } else {
+            // Append the number as part of the integer part of the value
+            self.value = self.value * 10 + number
+            self.digitsAfterDecimal = 0
+          }
         }
     }
+
     
+
     //Setting up the grid to place the buttons in
     func buttonWidth(item: CalcButton) -> CGFloat {
         //Making the Zero button take up 2 cell space; every other button gets one cell
