@@ -2,19 +2,6 @@
 
 import SwiftUI
 
-extension CharacterSet {
-    static let zeroDigitsAfterDecimal = CharacterSet(charactersIn: "0").union(.punctuationCharacters)
-}
-extension String {
-    func trimmingTrailingZeros() -> String {
-        var decimalSeparator = Locale.current.decimalSeparator ?? "."
-        if decimalSeparator == "." {
-            decimalSeparator = "\\" + decimalSeparator // Escape period for regex
-        }
-        return self.replacingOccurrences(of: "\\(decimalSeparator)0+$", with: "", options: .regularExpression)
-    }
-}
-
 enum CalcButton: String {
     //All the required buttons for the portrait orientation for yourCalc app
     //Need to add more more the landscape orientation
@@ -61,7 +48,7 @@ struct ContentView: View {
     @State var value: Double = 0              //Default start value
     @State var storedValue: Double = 0          //Stores the value when "Operation" buttons are tapped
     @State var currentOperation: Operation = .none      //Sets the current operation to "none" before clicking any operation button
-    @State var decimalEntered = false
+    @State var decimalEntered = false      // Boolean variable to keep track if the decimal was entered or not
     @State var digitsAfterDecimal: Int = 0 // Track the number of digits after the decimal point
     @State var errorMessage: String? = nil // Hold error message
 
@@ -148,7 +135,7 @@ struct ContentView: View {
 
 
 
-    //Logic
+    //Main Logic
     func didTap(button: CalcButton) {
         switch button {
         case .add, .subtract, .multiply, .divide, .equal:
@@ -189,11 +176,12 @@ struct ContentView: View {
             self.value *= -1
         case .percent:
             self.value /= 100
+            //Assist from chatgpt for the default once I added the decimal
         default:
           let number = Double(button.rawValue)!
           if self.decimalEntered {
               self.digitsAfterDecimal += 1
-            // Append the number as a fractional part
+            // Append the number as a fractional part.
               self.value += number / pow(10, Double(self.digitsAfterDecimal)) // Divide by 10 to shift the number one place to the right
           } else {
             // Append the number as part of the integer part of the value
