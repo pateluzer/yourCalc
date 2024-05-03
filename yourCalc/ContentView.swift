@@ -2,6 +2,19 @@
 
 import SwiftUI
 
+extension CharacterSet {
+    static let zeroDigitsAfterDecimal = CharacterSet(charactersIn: "0").union(.punctuationCharacters)
+}
+extension String {
+    func trimmingTrailingZeros() -> String {
+        var decimalSeparator = Locale.current.decimalSeparator ?? "."
+        if decimalSeparator == "." {
+            decimalSeparator = "\\" + decimalSeparator // Escape period for regex
+        }
+        return self.replacingOccurrences(of: "\\(decimalSeparator)0+$", with: "", options: .regularExpression)
+    }
+}
+
 enum CalcButton: String {
     //All the required buttons for the portrait orientation for yourCalc app
     //Need to add more more the landscape orientation
@@ -82,16 +95,17 @@ struct ContentView: View {
                     HStack {
                         Spacer()
                         // Display the value if it's not nil, otherwise display "0"
-                        if self.value == 0 {
-                                Text("0")  // Display "0" when the value is exactly zero
-                                    .font(.system(size: 100))
-                                    .foregroundColor(.white)
-                                    .bold()
-                            } else {
-                                Text(String(format: "%.6f", self.value))  // Format the value with 6 decimal places otherwise
-                                    .font(.system(size: 100))
-                                    .foregroundColor(.white)
-                            }
+                        if (self.value == 0 && !decimalEntered) {
+                            Text("0")  // Display "0" when the value is exactly zero
+                                .font(.system(size: 100))
+                                .foregroundColor(.white)
+                                .bold()
+                        } else {
+                            // Format the value with the correct number of decimal places
+                            Text(formatValue())
+                                .font(.system(size: 100))
+                                .foregroundColor(.white)
+                        }
                     }
                     .padding()
                 }
@@ -120,6 +134,18 @@ struct ContentView: View {
             }
         }
     }
+
+
+    // Format the value with the correct number of decimal places
+    private func formatValue() -> String {
+        if !decimalEntered {
+            return String(format: "%.0f", value) // Display integer value if decimal is not entered
+        } else {
+            let stringValue = String(value)
+            return stringValue
+        }
+    }
+
 
 
     //Logic
