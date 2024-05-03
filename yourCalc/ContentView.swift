@@ -2,10 +2,6 @@
 
 import SwiftUI
 
-var test:Double = 1.2
-var test1 = Int(test)
-
-
 enum CalcButton: String {
     //All the required buttons for the portrait orientation for yourCalc app
     //Need to add more more the landscape orientation
@@ -54,6 +50,8 @@ struct ContentView: View {
     @State var currentOperation: Operation = .none      //Sets the current operation to "none" before clicking any operation button
     @State var decimalEntered = false
     @State var digitsAfterDecimal: Int = 0 // Track the number of digits after the decimal point
+    @State var errorMessage: String? = nil // Hold error message
+
 
     
     //Placing the buttons in the correct order
@@ -73,34 +71,26 @@ struct ContentView: View {
             VStack {
                 Spacer()
 
-                // Text display
-                HStack {
-                    Spacer()
-                    //Text(String(format: "%.0f", self.value))    //Converts Double to String for display
-                    if (self.value == floor(self.value)) {
+                // Error message or Text display
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .bold()
+                        .font(.system(size: 70))
+                        .foregroundColor(.red)
+                        .padding()
+                } else {
+                    HStack {
+                        Spacer()
+                        // Display the value if it's not nil, otherwise display "0"
                         Text("\(Int(value))")
                             .bold()
                             .font(.system(size: 100))
                             .foregroundColor(.white)
-                        
-                        
                     }
-                    //Add logic to only show the decimal numbers if they are entered
-                    else {
-                        Text(String(format: "%.4f", self.value))
-                            .bold()
-                            .font(.system(size: 100))
-                            .foregroundColor(.white)
-                    }
-                        //Styling
-                        //.bold()
-                        //.font(.system(size: 100))
-                        //.foregroundColor(.white)
+                    .padding()
                 }
-                .padding()
 
                 // Our buttons
-                //for loop to set dimensions, size, and color of every button
                 ForEach(buttons, id: \.self) { row in
                     HStack(spacing: 18) {
                         ForEach(row, id: \.self) { item in
@@ -124,7 +114,8 @@ struct ContentView: View {
             }
         }
     }
-    
+
+
     //Logic
     func didTap(button: CalcButton) {
         switch button {
@@ -140,13 +131,21 @@ struct ContentView: View {
                 case .add: self.value = self.storedValue + currentValue
                 case .subtract: self.value = self.storedValue - currentValue
                 case .multiply: self.value = self.storedValue * currentValue
-                case .divide: self.value = self.storedValue / currentValue
+                case .divide:
+                                    // Check for division by zero
+                                    if currentValue != 0 {
+                                        self.value = (self.storedValue) / currentValue
+                                    } else {
+                                        // Handle division by zero by setting error message
+                                        self.errorMessage = "Error: Division by zero"
+                                    }
                 case .none: break
                 }
                 self.decimalEntered = false
             }
         case .clear:
             self.value = 0
+            self.errorMessage = nil // Clear error message when clear button is tapped
             self.decimalEntered = false
             self.digitsAfterDecimal = 0
         case .decimal:
