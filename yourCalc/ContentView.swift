@@ -82,10 +82,16 @@ struct ContentView: View {
                     HStack {
                         Spacer()
                         // Display the value if it's not nil, otherwise display "0"
-                        Text("\(Int(value))")
-                            .bold()
-                            .font(.system(size: 100))
-                            .foregroundColor(.white)
+                        if self.value == 0 {
+                                Text("0")  // Display "0" when the value is exactly zero
+                                    .font(.system(size: 100))
+                                    .foregroundColor(.white)
+                                    .bold()
+                            } else {
+                                Text(String(format: "%.6f", self.value))  // Format the value with 6 decimal places otherwise
+                                    .font(.system(size: 100))
+                                    .foregroundColor(.white)
+                            }
                     }
                     .padding()
                 }
